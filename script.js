@@ -5,10 +5,15 @@ let leftScreenContainerElement;
 let rightScreenContainerElement;
 
 function drawPage() {
-  prepareUniqueItems();
-  preparePercentages();
-  prepareRoutes();
-  prepareGlobalModifiers();
+  const appData = loadFromLocalStorage();
+  if (appData) {
+    window.appData = appData;
+  } else {
+    prepareUniqueItems();
+    preparePercentages();
+    prepareRoutes();
+    prepareGlobalModifiers();
+  }
 
   renderLeftScreen();
   renderRightScreen();
@@ -77,12 +82,10 @@ function createTradepack(tradepack) {
 
   const percentageWrapper = append(cardHeader, "div", null, "input-group");
   percentageWrapper.style.width = "90px";
-  const percentageInput = append(
-    percentageWrapper,
-    "input",
-    null,
-    "form-control"
-  );
+  const percentageInput = append(percentageWrapper, "input", null, {
+    classList: "form-control",
+    name: "percentageWrapper",
+  });
   setupInput(percentageInput, tradepack.info.percentage, onPercentageChange, [
     tradepack,
   ]);
@@ -170,6 +173,22 @@ function createTradepackItemTable(tradepack) {
 function createTradepackConfig() {
   const configWrapper = document.createElement("div");
 
+  const places = Object.keys(window.appData.routes.places);
+
+  const mappedFromPlaces = places.map((place) => ({
+    name: place,
+    value: window.appData.routes.places[place],
+  }));
+
+  const mappedToPlaces = places.map((place) => ({
+    name: `${place} (${
+      window.appData.routes.table[window.appData.from][
+        window.appData.routes.places[place]
+      ]
+    })`,
+    value: window.appData.routes.places[place],
+  }));
+
   const locationWrapper = append(
     configWrapper,
     "div",
@@ -177,36 +196,89 @@ function createTradepackConfig() {
     "input-group mb-3"
   );
   append(locationWrapper, "label", "Route", "input-group-text");
-  const locationSelect = append(locationWrapper, "select", null, "form-select");
-  setupSelect(locationSelect, window.appData.routes, 0, onLocationChange);
+  const locationFromSelect = append(
+    locationWrapper,
+    "select",
+    null,
+    "form-select"
+  );
+  setupSelect(
+    locationFromSelect,
+    mappedFromPlaces,
+    window.appData.from ?? 0,
+    onLocationChange,
+    ["from"]
+  );
+  const locationToSelect = append(
+    locationWrapper,
+    "select",
+    null,
+    "form-select"
+  );
+  setupSelect(
+    locationToSelect,
+    mappedToPlaces,
+    window.appData.to ?? 0,
+    onLocationChange,
+    ["to"]
+  );
 
   const modifiersWrapper = append(configWrapper, "div", null);
   modifiersWrapper.style.display = "flex";
   modifiersWrapper.style.justifyContent = "space-around";
 
-  const reputationPerkModifier = append(
+  const reputation5PerkModifier = append(
     modifiersWrapper,
     "div",
     null,
     "form-check form-switch"
   );
-  const reputationPerkModifierInput = append(
-    reputationPerkModifier,
+  const reputation5PerkModifierInput = append(
+    reputation5PerkModifier,
     "input",
     null,
     {
+      name: "reputation5PerkModifierInput",
       classList: "form-check-input",
       type: "checkbox",
       role: "switch",
-      id: "reputationPerkModifier",
+      checked: window.appData.globalProfitModifiers.reputation5Perk.enabled,
+      id: "reputation5PerkModifierInput",
     }
   );
-  setupInput(reputationPerkModifierInput, false, onModifierChange, [
-    "reputationPerk",
+  setupInput(reputation5PerkModifierInput, false, onModifierChange, [
+    "reputation5Perk",
   ]);
-  append(reputationPerkModifier, "label", "Reputation Perk (5%)", {
+  append(reputation5PerkModifier, "label", "Reputation Perk (5%)", {
     classList: "form-check-label",
-    htmlFor: "reputationPerkModifier",
+    htmlFor: "reputation5PerkModifierInput",
+  });
+
+  const reputation10PerkModifier = append(
+    modifiersWrapper,
+    "div",
+    null,
+    "form-check form-switch"
+  );
+  const reputation10PerkModifierInput = append(
+    reputation10PerkModifier,
+    "input",
+    null,
+    {
+      name: "reputation10PerkModifierInput",
+      classList: "form-check-input",
+      type: "checkbox",
+      role: "switch",
+      checked: window.appData.globalProfitModifiers.reputation10Perk.enabled,
+      id: "reputation10PerkModifierInput",
+    }
+  );
+  setupInput(reputation10PerkModifierInput, false, onModifierChange, [
+    "reputation10Perk",
+  ]);
+  append(reputation10PerkModifier, "label", "Reputation Perk (10%)", {
+    classList: "form-check-label",
+    htmlFor: "reputation10PerkModifierInput",
   });
 
   const warChannelModifier = append(
@@ -216,9 +288,11 @@ function createTradepackConfig() {
     "form-check form-switch"
   );
   const warChannelModifierInput = append(warChannelModifier, "input", null, {
+    name: "warChannelModifier",
     classList: "form-check-input",
     type: "checkbox",
     role: "switch",
+    checked: window.appData.globalProfitModifiers.warChannel.enabled,
     id: "warChannelModifier",
   });
   setupInput(warChannelModifierInput, false, onModifierChange, ["warChannel"]);
@@ -248,27 +322,38 @@ function createTradepackConfig() {
     const tablePriceTd = append(tableRow, "td");
     const priceWrapper = append(tablePriceTd, "div", null, "input-group");
     append(priceWrapper, "span", "$", "input-group-text");
-    const priceInput = append(priceWrapper, "input", null, "form-control");
-    setupInput(priceInput, uniqueItem.price, onPriceChange, [
-      priceInput,
-      uniqueItem,
-    ]);
+    const priceInput = append(priceWrapper, "input", null, {
+      name: "priceWrapper",
+      value: uniqueItem.price,
+      classList: "form-control",
+    });
+    setupInput(priceInput, uniqueItem.price, onPriceChange, [uniqueItem]);
   });
 
   return configWrapper;
 }
 
-function onPriceChange(priceInput, uniqueItem, event) {
-  priceInput.value = event.target.value;
+function onPriceChange(uniqueItem, event) {
+  if (event.target.value < 0 || !/^\d+$/g.test(event.target.value)) {
+    event.target.value = 0;
+  }
+
+  event.target.value = event.target.value.replace(/^0+/, "");
+  if (event.target.value === "") {
+    event.target.value = "0";
+  }
+  uniqueItem.price = event.target.value;
 
   window.appData.tradepacks.forEach((tradepack) => {
     tradepack.items.forEach((item) => {
       if (item.name === uniqueItem.name) {
-        item.price = event.target.value;
+        item.price = uniqueItem.price;
         item.total = item.price * item.amount;
       }
     });
   });
+
+  localStorage.setItem("appData", JSON.stringify(window.appData));
 
   renderLeftScreen(leftScreenContainerElement);
 }
@@ -276,23 +361,39 @@ function onPriceChange(priceInput, uniqueItem, event) {
 function onPercentageChange(tradepack, event) {
   tradepack.info.percentage = event.target.value;
 
+  localStorage.setItem("appData", JSON.stringify(window.appData));
+
   renderLeftScreen(leftScreenContainerElement);
 }
 
-function onLocationChange(event) {
-  window.appData.routeTileCount = event.target.value;
+function onLocationChange(location, event) {
+  if (location === "from") {
+    window.appData.from = event.target.value;
+  } else if (location === "to") {
+    window.appData.to = event.target.value;
+  }
+
+  window.appData.routeTileCount =
+    window.appData.routes.table[window.appData.from][window.appData.to];
+
+  localStorage.setItem("appData", JSON.stringify(window.appData));
 
   renderLeftScreen(leftScreenContainerElement);
+  renderRightScreen(rightScreenContainerElement);
 }
 
 function onModifierChange(modifier, event) {
   if (event.target.checked) {
     window.appData.globalProfitModifier +=
-      window.appData.globalProfitModifiers[modifier];
+      window.appData.globalProfitModifiers[modifier].value;
+    window.appData.globalProfitModifiers[modifier].enabled = true;
   } else {
     window.appData.globalProfitModifier -=
-      window.appData.globalProfitModifiers[modifier];
+      window.appData.globalProfitModifiers[modifier].value;
+    window.appData.globalProfitModifiers[modifier].enabled = false;
   }
+
+  localStorage.setItem("appData", JSON.stringify(window.appData));
 
   renderLeftScreen(leftScreenContainerElement);
 }
@@ -372,7 +473,7 @@ function setupSelect(
     const option = append(selectElement, "option");
     option.value = selectValue.value;
     option.text = selectValue.name;
-    if (index === selectInitValue) {
+    if (index === Number(selectInitValue)) {
       option.selected = true;
     }
   });
