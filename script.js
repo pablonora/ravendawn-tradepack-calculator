@@ -9,10 +9,7 @@ function drawPage() {
   if (appData) {
     window.appData = appData;
   } else {
-    prepareUniqueItems();
-    preparePercentages();
-    prepareRoutes();
-    prepareGlobalModifiers();
+    prepareTradepacks();
   }
 
   renderLeftScreen();
@@ -33,7 +30,8 @@ function renderLeftScreen() {
     "d-flex flex-wrap justify-content-between"
   );
   window.appData.tradepacks.forEach((tradepack) => {
-    pageColumnContainer.appendChild(createTradepack(tradepack));
+    if (tradepack.info.visible)
+      pageColumnContainer.appendChild(createTradepack(tradepack));
   });
 
   leftScreenContainerElement = pageColumnContainer;
@@ -301,6 +299,34 @@ function createTradepackConfig() {
     htmlFor: "warChannelModifier",
   });
 
+  const mappedFromTradepacks = window.appData.tradepacks.map((tradepack) => ({
+    name: tradepack.info.name,
+    value: tradepack.info.name,
+  }));
+  const tradepackFilterWrapper = append(
+    configWrapper,
+    "div",
+    null,
+    "input-group mb-3"
+  );
+  append(tradepackFilterWrapper, "label", "Filter", "input-group-text");
+  const tradepackFilterFromSelect = append(
+    tradepackFilterWrapper,
+    "select",
+    null,
+    {
+      classList: "form-select",
+      multiple: true,
+    }
+  );
+  setupSelectMultiple(
+    tradepackFilterFromSelect,
+    mappedFromTradepacks,
+    window.appData.tradepacksSelected ?? mappedFromTradepacks,
+    onTradepackFilterChange,
+    ["filter"]
+  );
+
   const itemTable = append(configWrapper, "table", null, "table table-striped");
   const tableHeader = append(
     itemTable,
@@ -398,6 +424,19 @@ function onModifierChange(modifier, event) {
   renderLeftScreen(leftScreenContainerElement);
 }
 
+function onTradepackFilterChange(modifier, event) {
+  window.appData.tradepacks.forEach((tradepack) => {
+    tradepack.info.visible = false;
+    Array.from(event.target.selectedOptions).forEach((tradepackSelected) => {
+      if (tradepack.info.name === tradepackSelected.value)
+        tradepack.info.visible = true;
+    });
+  });
+
+  localStorage.setItem("appData", JSON.stringify(window.appData));
+  renderLeftScreen(leftScreenContainerElement);
+}
+
 function append(where, element, node, props) {
   const htmlElement = document.createElement(element);
 
@@ -474,6 +513,28 @@ function setupSelect(
     option.value = selectValue.value;
     option.text = selectValue.name;
     if (index === Number(selectInitValue)) {
+      option.selected = true;
+    }
+  });
+
+  selectElement.addEventListener(
+    "change",
+    selectFunction.bind(selectElement, ...selectFunctionArgs)
+  );
+}
+
+function setupSelectMultiple(
+  selectElement,
+  selectValues,
+  selectInitValue,
+  selectFunction,
+  selectFunctionArgs = []
+) {
+  selectValues.forEach((selectValue, index) => {
+    const option = append(selectElement, "option");
+    option.value = selectValue.value;
+    option.text = selectValue.name;
+    if (selectInitValue.includes(selectValue)) {
       option.selected = true;
     }
   });

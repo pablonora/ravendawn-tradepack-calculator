@@ -10,6 +10,18 @@ function calculateTradepackProfitMargin(route, tradepack) {
   return tradepackProfit - tradepackCost;
 }
 
+function prepareTradepacks() {
+  prepareVisibility();
+  prepareUniqueItems();
+  preparePercentages();
+  prepareRoutes();
+  prepareGlobalModifiers();
+}
+
+function prepareVisibility () {
+  window.appData.tradepacks.forEach(tradepack => tradepack.info.visible = true);
+}
+
 function prepareUniqueItems() {
   window.appData.uniqueItems = window.appData.uniqueItems
     .sort()
