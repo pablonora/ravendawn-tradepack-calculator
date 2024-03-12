@@ -6,8 +6,8 @@ function calculateTradepackCost(tradepack) {
 
 function calculateTradepackProfitMargin(route, tradepack) {
   const tradepackCost = calculateTradepackCost(tradepack);
-  const tradepackProfit = calculateTradepackValue(route, tradepack);
-  return tradepackProfit - tradepackCost;
+  const tradepackSellValue = calculateTradepackValue(route, tradepack);
+  return tradepackSellValue - tradepackCost;
 }
 
 function prepareTradepacks() {
@@ -18,8 +18,10 @@ function prepareTradepacks() {
   prepareGlobalModifiers();
 }
 
-function prepareVisibility () {
-  window.appData.tradepacks.forEach(tradepack => tradepack.info.visible = true);
+function prepareVisibility() {
+  window.appData.tradepacks.forEach(
+    (tradepack) => (tradepack.info.visible = true)
+  );
 }
 
 function prepareUniqueItems() {
@@ -42,7 +44,7 @@ function prepareRoutes() {
     places: {
       Riverend: 0,
       Margrove: 1,
-      'Orca Bay': 2,
+      "Orca Bay": 2,
       Seabreeze: 3,
       Tarmire: 4,
       Darzuac: 5,
@@ -68,7 +70,7 @@ function prepareRoutes() {
   
   window.appData.from = 0;
   window.appData.to = 0;
-  window.appData.routeTileCount = 
+  window.appData.routeTileCount =
     window.appData.routes.table[window.appData.from][window.appData.to];
 }
 
@@ -103,6 +105,6 @@ function calculateTradepackValue(routeTileCount, tradepack) {
 }
 
 function loadFromLocalStorage() {
-  const appData = JSON.parse(localStorage.getItem('appData'));
+  const appData = JSON.parse(localStorage.getItem("appData"));
   return appData;
 }

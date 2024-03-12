@@ -29,9 +29,16 @@ function renderLeftScreen() {
     null,
     "d-flex flex-wrap justify-content-between"
   );
-  window.appData.tradepacks.forEach((tradepack) => {
-    if (tradepack.info.visible)
+  window.appData.tradepacks = window.appData.tradepacks.sort(
+    (a, b) =>
+      calculateTradepackProfitMargin(window.appData.routeTileCount, b) -
+      calculateTradepackProfitMargin(window.appData.routeTileCount, a)
+  );
+  window.appData.tradepacks.forEach((tradepack, index) => {
+    tradepack.order = index;
+    if (tradepack.info.visible) {
       pageColumnContainer.appendChild(createTradepack(tradepack));
+    }
   });
 
   leftScreenContainerElement = pageColumnContainer;
@@ -120,12 +127,18 @@ function createTradepack(tradepack) {
   const tradepackProfitMargin = append(
     cardBody,
     "p",
-    "Profit margin",
+    `#${tradepack.order + 1 ?? 1}`,
     "card-text text-end"
   );
   const calculatedTradepackProfitMargin = calculateTradepackProfitMargin(
     window.appData.routeTileCount,
     tradepack
+  );
+  tradepack.info.profitMargin = append(
+    tradepackProfitMargin,
+    "span",
+    "Profit margin",
+    "ms-2 mr-2"
   );
   append(
     tradepackProfitMargin,
