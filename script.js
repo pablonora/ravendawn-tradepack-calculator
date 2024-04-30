@@ -91,9 +91,13 @@ function createTradepack(tradepack) {
     classList: "form-control",
     name: "percentageWrapper",
   });
-  setupInput(percentageInput, tradepack.info.percentage, onPercentageChange, [
-    tradepack,
-  ]);
+  setupInput(
+    percentageInput,
+    tradepack.info.percentage,
+    onPercentageChange,
+    [tradepack],
+    1000
+  );
   append(percentageWrapper, "span", "%", "input-group-text");
 
   append(cardBody, "div", createTradepackItemTable(tradepack));
@@ -495,13 +499,14 @@ function setupInput(
   inputElement,
   inputInitValue,
   inputFunction,
-  inputFunctionArgs = []
+  inputFunctionArgs = [],
+  debounceTime = 300
 ) {
   inputElement.value = inputInitValue;
 
   const debouncedInputHandler = debounce(
     inputFunction.bind(inputElement, ...inputFunctionArgs),
-    300
+    debounceTime
   );
 
   if (inputElement.type === "checkbox") {
