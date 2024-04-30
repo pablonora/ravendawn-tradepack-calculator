@@ -23,22 +23,24 @@ function processTableData() {
       return itemImg;
     });
 
-    const items = child.children[2].innerText.split(/,/g).map((item, index) => {
-      const itemData = item.trim().split(/(?<=^\S+)\s/g);
+    const items = child.children[2].innerText
+      .split(/\n/g)
+      .map((item, index) => {
+        const itemData = item.trim().split(/(?<=^\S+)\s/g);
 
-      itemData[1] = itemData[1]
-        .split(" ")
-        .map((name) => name.charAt(0).toUpperCase() + name.substring(1))
-        .join(" ");
+        itemData[1] = itemData[1]
+          .split(" ")
+          .map((name) => name.trim())
+          .join(" ");
 
-      uniqueItems.add(itemData[1]);
+        uniqueItems.add(itemData[1]);
 
-      return {
-        name: itemData[1],
-        amount: itemData[0],
-        img: images[index],
-      };
-    });
+        return {
+          name: itemData[1],
+          amount: itemData[0],
+          img: images[index],
+        };
+      });
     tradepacks.push({ info, items });
   }
 

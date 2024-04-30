@@ -93,13 +93,12 @@ function prepareGlobalModifiers() {
   window.appData.globalProfitModifier = 1;
 }
 
-const TRADEPACK_BASE_VALUE = 10000;
-const TRADEPACK_TILE_VALUE = 6;
+const TRADEPACK_BASE_VALUE = 20000;
+const TRADEPACK_TILE_VALUE = 12;
 function calculateTradepackValue(routeTileCount, tradepack) {
   const tradepackValue =
-    (TRADEPACK_BASE_VALUE + TRADEPACK_TILE_VALUE * routeTileCount) *
-    (Number(tradepack.info.percentage) / 100) *
-    window.appData.globalProfitModifier;
+    ((TRADEPACK_BASE_VALUE + (TRADEPACK_TILE_VALUE * routeTileCount)) *
+    (Number(tradepack.info.percentage) / 100)) * window.appData.globalProfitModifier;
 
   return Math.ceil(tradepackValue);
 }
